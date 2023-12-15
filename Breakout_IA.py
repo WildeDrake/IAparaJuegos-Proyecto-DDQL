@@ -8,11 +8,11 @@ import cv2  # Necesitarás OpenCV para trabajar con imágenes
 # por lo que debemos transformarlo a discreto.
 def discretizar_estado(estado):
    matriz = estado[0] # Obtencion matriz.
-   matriz_recortada = matriz[17:-9, 8:-8] # Se recorta la matriz
+   matriz_recortada = matriz[17:-9, 8:-8] # Se recorta la matriz.
    matriz_pequeña = cv2.resize(matriz_recortada, (92, 72)) # Se reajusta la resolucion a la mitad.
-   arreglo = np.where(matriz_pequeña != 0, 1, 0).flatten() # Se cambian los valores (0s quedan como 0 y diferentes quedan
+   arreglo = np.where(matriz_pequeña != 0, 1, 0).flatten() # Se cambian los valores (0s quedan como 0 y diferentes quedan.
                                                            # como 1) y se pasa a arreglo.
-   np.set_printoptions(threshold=sys.maxsize) # Imprime el arreglo resultante
+   np.set_printoptions(threshold=sys.maxsize) # Imprime el arreglo resultante.
    print(arreglo)
 
    return arreglo
