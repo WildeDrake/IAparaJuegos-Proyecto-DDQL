@@ -5,6 +5,6 @@ REFERENCIAS:
 - https://www.youtube.com/@brthor1117/playlists
 - https://gymnasium.farama.org/environments/atari/breakout/
 - https://www.nature.com/articles/nature14236
-- 
+- https://github.com/hwcrane/atari-DQL
 - 
 - 
