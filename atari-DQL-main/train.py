@@ -34,9 +34,7 @@ def train(env: gym.Env, agent: AtariAgent, n_episodes: int, batch_size: int, max
             action = agent.next_action(observation, epsilon=0.02)
 
             # Take the chosen action in the environment and receive the next observation and reward
-            next_observation, reward, terminated, truncated, info = env.step(
-                action
-            )
+            next_observation, reward, terminated, truncated, info = env.step(action)
 
             done = truncated or terminated
             next_observation = convert_observation(next_observation)
@@ -64,7 +62,7 @@ def train(env: gym.Env, agent: AtariAgent, n_episodes: int, batch_size: int, max
         writer.add_scalar('Epsilon', agent.epsilon(), episode)
         writer.flush()
 
-        if episode % 1000 == 1:
+        if episode % 100 == 0:
             torch.save(agent.policy_net.to('cpu'), f'in_progress_model_{episode}')
             agent.policy_net.to(agent.device)
     writer.close()
