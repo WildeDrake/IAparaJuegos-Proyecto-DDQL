@@ -55,7 +55,7 @@ def training(config_data):
     episodes = int(config_data.get('episodes'))
     max_episode_length = int(config_data.get('max_episode_length'))
 
-    # Load expensive imports here to speed up program start time
+    # Cargar importaciones costosas aquí para acelerar el tiempo de inicio del programa.
     import torch
     import gymnasium as gym
     from agent import AtariAgent

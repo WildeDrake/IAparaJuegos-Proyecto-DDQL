@@ -3,7 +3,7 @@ import numpy as np
 import gymnasium as gym
 
 def convert_observation(observation):
-    """Converts the observation from a numpy array to a torch tensor"""
+    # Convierte la observación de un arreglo numpy a un tensor torch.
     return torch.from_numpy(np.array(observation))
 
 
@@ -28,23 +28,21 @@ class NoopStart(gym.Wrapper):
 
 def wrap_env(env: gym.Env):
     """
-    Prepare a Gym environment for training or testing with an Atari agent.
+    Preparar un entorno de Gym para entrenar o probar con un agente Atari.
     
     Args:
-        env (gym.Env): The original Gym environment to be wrapped.
-        
+        env (gym.Env): El entorno de Gym original que se envolverá.    
     Returns:
-        gym.Env: The wrapped Gym environment.
+        gym.Env: El entorno de Gym Wrapped.
     """
 
-    # Convert observations to grayscale
+    # Convertir observaciones a escala de grises
     env = gym.wrappers.GrayScaleObservation(env)
     
-    # Resize observations to a smaller resolution
+    # Reescala las observaciones a una resolución más pequeña
     env = gym.wrappers.ResizeObservation(env, (84, 84))
     
-    # Stack multiple consecutive frames to provide temporal information to the agent
+    # Pila de múltiples fotogramas consecutivos para proporcionar información temporal al agente
     env = gym.wrappers.FrameStack(env, num_stack=4)
-
 
     return env

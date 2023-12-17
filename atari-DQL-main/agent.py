@@ -25,38 +25,37 @@ class AtariAgent:
         network_file=None,
     ) -> None:
         """
-        Creates a new Atari agent.
+        Crea un nuevo agente Atari.
 
         Args:
-            device (torch.device): The device (CPU or GPU) on which to run the agent.
-            n_actions (int): The number of possible actions the agent can take.
-            lr (float): The learning rate for the agent's neural network optimizer.
-            epsilon_start (float): The initial exploration rate for epsilon-greedy policy.
-            epsilon_end (float): The final exploration rate for epsilon-greedy policy.
-            epsilon_decay (float): The rate at which epsilon decays over time.
-            total_memory (int): The maximum capacity of the replay memory.
-            initial_memory (int): The minimum number of transitions required in the replay memory before learning starts.
-            gamma (float): The discount factor for future rewards in the Q-learning update.
-            target_update (int): The frequency at which to update the target network.
-
-            network_file (str, optional): A file to load pre-trained network weights from.
+            device (torch.device): El dispositivo (CPU o GPU) en el que se ejecutará el agente.
+            n_actions (int): El número de acciones posibles que el agente puede tomar.
+            lr (float): La tasa de aprendizaje para el optimizador de la red neuronal del agente.
+            epsilon_start (float): La tasa de exploración inicial para la política epsilon-greedy.
+            epsilon_end (float): La tasa de exploración final para la política epsilon-greedy.
+            epsilon_decay (float): La tasa a la que decae el épsilon con el tiempo.
+            total_memory (int): La capacidad máxima de la memoria de repetición.
+            intial_memory (int): El número mínimo de transiciones requeridas en la memoria de repetición antes de que comience el aprendizaje.
+            gamma (float): El factor de descuento para las recompensas futuras en la actualización de Q-learning.
+            target_update (int): La frecuencia con la que se actualiza la red objetivo.
+            network_file (str, opcional): Un archivo para cargar los pesos de la red pre-entrenada.
         """
         self.n_actions = n_actions
         self.device = device
 
-        # Deep Q networkd for policy and target, with optimiser for policy
+        # Deep Q network para la política y el objetivo, con optimizador para la política.
         if network_file:
             self.policy_net = torch.load(network_file).to(self.device)
             self.target_net = torch.load(network_file).to(self.device)
         else:
-            # Create new policy and target networks if no pre-trained weights are provided
+            # Crea nuevas redes de política y objetivo si no se proporcionan pesos pre-entrenados.
             self.policy_net = DQN(self.n_actions).to(device)
             self.target_net = DQN(self.n_actions).to(device)
 
             self.policy_net.apply(model.init_weights)
             self.target_net.load_state_dict(self.policy_net.state_dict())
 
-        # Optimiser for the policy network
+        # Optimizador para la red de política.
         self.optimiser = Adam(self.policy_net.parameters(), lr=lr)
 
         self.steps_done = 0
@@ -66,7 +65,7 @@ class AtariAgent:
         self.gamma = gamma
         self.target_update = target_update
 
-        # Initialize the replay memory
+        # Inicializa la memoria de repetición.
         self.memory = ReplayMemory(capacity=total_memory)
         self.initial_memory = initial_memory
 
@@ -79,14 +78,14 @@ class AtariAgent:
         done: bool,
     ):
         """
-        Stores a new transition in the replay memory.
+        Almacena una nueva transición en la memoria de repetición.
 
         Args:
-            observation (torch.Tensor): The current observation/state.
-            action (torch.Tensor): The action taken.
-            reward (torch.Tensor): The reward received.
-            next_observation (torch.Tensor): The next observation/state.
-            done (bool): A flag indicating if the episode is done.
+            observation (torch.Tensor): La observación/estado actual.
+            action (torch.Tensor): La acción tomada.
+            reward (torch.Tensor): La recompensa recibida.
+            next_observation (torch.Tensor): La siguiente observación/estado.
+            done (bool): Una bandera que indica si el episodio ha terminado.
         """
 
         self.memory.push(
@@ -98,10 +97,10 @@ class AtariAgent:
 
     def epsilon(self):
         """
-        Calculates the current epsilon threshold for epsilon-greedy policy.
-
-        Returns:
-            float: The current epsilon value.
+        Calcula el umbral épsilon actual para la política épsilon-greedy.
+        
+        Return:
+            float: El valor épsilon actual.
         """
         return self.epsilon_end + (
             self.epsilon_start - self.epsilon_end
@@ -111,14 +110,14 @@ class AtariAgent:
         self, observation: torch.Tensor, epsilon: Optional[float] = None
     ) -> torch.Tensor:
         """
-        Calculates the next action to be taken using an epsilon-greedy policy.
+            Calcula la siguiente acción a tomar utilizando una política épsilon-greedy.
 
-        Args:
-            observation (torch.Tensor): The current observation/state.
-            epsilon (float, optional): The epsilon value to use for epsilon-greedy policy.
+            Args:
+                observation (torch.Tensor): La observación/estado actual.
+                epsilon (float, opcional): El valor épsilon a utilizar para la política épsilon-greedy.
 
-        Returns:
-            torch.Tensor: The chosen action.
+            Returns:
+                torch.Tensor: La acción elegida.
         """
         if epsilon is None:
             epsilon = self.epsilon()
@@ -141,73 +140,73 @@ class AtariAgent:
 
     def optimise(self, batch_size: int):
         """
-        Performs one optimization step of the Q-network.
+            Realiza un paso de optimización de la red Q.
 
-        Args:
-            batch_size (int): The number of transitions to sample and use for optimization.
+            Args:
+                batch_size (int): El número de transiciones a muestrear y utilizar para la optimización.
         """
 
-        # Only start optimizing once there are enough transitions in memory
+        # Solo comienza a optimizar una vez que haya suficientes transiciones en la memoria.
         if (
             len(self.memory) < self.initial_memory
             or len(self.memory) < batch_size
         ):
             return
 
-        # Sample a batch of transitions from the replay memory
+        # Muestrea un lote de transiciones de la memoria de repetición.
         transitions = self.memory.sample(batch_size)
         batch = Transition(*zip(*transitions))
 
-        # Create a mask for non-final states in the batch
+        # Crea una máscara para los estados no finales en el lote.
         non_final_mask = torch.tensor(
             tuple(map(lambda s: s is not None, batch.next_state)),
             device=self.device,
             dtype=torch.bool,
         )
 
-        # Extract non-final next states and convert them to a tensor
+        # Extrae los siguientes estados no finales y los convierte en un tensor.
         non_final_next_states = torch.stack(
             [s for s in batch.next_state if s is not None]
         ).to(self.device)
 
-        # Convert states, actions, and rewards in the batch to tensors
+        # Convierte los estados, acciones y recompensas en el lote en tensores.
         state_batch = torch.stack(batch.state).to(self.device)
         action_batch = torch.cat(batch.action).to(self.device)
         reward_batch = torch.cat(batch.reward).to(self.device)
 
-        # Compute the predicted Q-values for the state-action pairs in the batch
+        # Computa los valores Q predichos para los pares estado-acción en el lote.
         state_action_values = self.policy_net(state_batch).gather(
             1, action_batch
         )
 
-        # Initialise the next state values as zeros
+        # Inicializa los valores del siguiente estado como ceros.
         next_state_values = torch.zeros(batch_size, device=self.device)
-        # Update the next state values with values from the target network for non-final states
+        # Actualiza los valores del siguiente estado con los valores de la red objetivo para los estados no finales.
         next_state_values[non_final_mask] = (
             self.target_net(non_final_next_states).max(1)[0].detach()
         )
 
-        # Compute the expected state-action values using the Bellman equation
+        # Computa los valores esperados de estado-acción utilizando la ecuación de Bellman.
         expected_state_action_values = (
             next_state_values * self.gamma
         ) + reward_batch
 
-        # Compute the loss using the Huber loss (smooth L1 loss)
+        # Computa la pérdida utilizando la pérdida de Huber (pérdida L1 suave).
         loss = torch.nn.functional.smooth_l1_loss(
             state_action_values, expected_state_action_values.unsqueeze(1)
         )
 
-        # Zero the gradients of the policy network's parameters
+        # Cero los gradientes de los parámetros de la red de política.
         self.optimiser.zero_grad()
 
-        # Compute the gradients and perform gradient clipping
+        # Computa los gradientes y realiza el recorte de gradientes.
         loss.backward()
         for param in self.policy_net.parameters():
             param.grad.data.clamp_(-1, 1)
 
-        # Update the policy network's parameters
+        # Actualiza los parámetros de la red de política.
         self.optimiser.step()
 
-        # Update the target network's parameters if the target update interval is reached
+        # Actualiza los parámetros de la red objetivo si se alcanza el intervalo de actualización del objetivo.
         if self.steps_done % self.target_update == 1:
             self.target_net.load_state_dict(self.policy_net.state_dict())

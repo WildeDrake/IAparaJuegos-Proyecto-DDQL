@@ -9,60 +9,59 @@ from utils import convert_observation
 
 def train(env: gym.Env, agent: AtariAgent, n_episodes: int, batch_size: int, max_episode_length: int):
     """
-    Train the Atari agent using the specified environment.
+    Entrena al agente Atari utilizando el entorno especificado.
 
     Args:
-        max_episode_length:
-        env (gym.Env): The Gym environment used for training.
-        agent (AtariAgent): The AtariAgent that will be trained.
-        n_episodes (int): The number of episodes to train the agent.
-        batch_size (int): The batch size used for Q-network optimization.
+        max_episode_length: El número máximo de pasos permitidos en un episodio.
+        env (gym.Env): El entorno de Gym utilizado para el entrenamiento.
+        agent (AtariAgent): El AtariAgent que será entrenado.
+        n_episodes (int): El número de episodios para entrenar al agente.
+        batch_size (int): El tamaño del lote utilizado para la optimización de la red Q.
     """
 
     rewards = deque(maxlen=100)
     writer = SummaryWriter()
     for episode in range(n_episodes):
-        # Reset the environment for a new episode and convert the initial observation
-
+        # Reinicia el entorno para un nuevo episodio y convierte la observación inicial.
         observation, _ = env.reset()
         observation = convert_observation(observation)
-
         total_reward = 0.0
 
         for _ in range(max_episode_length):
-            # Choose the next action using the agent's epsilon-greedy policy
+            # Elige la siguiente acción utilizando la política epsilon-greedy del agente.
             action = agent.next_action(observation, epsilon=0.02)
 
-            # Take the chosen action in the environment and receive the next observation and reward
+            # Tomar la acción elegida en el entorno y recibir la siguiente observación y recompensa.
             next_observation, reward, terminated, truncated, info = env.step(action)
 
             done = truncated or terminated
             next_observation = convert_observation(next_observation)
 
-            total_reward += reward  # type: ignore
+            total_reward += reward  # ignorar el tipo de dato.
             rewards.append(reward)
             reward = torch.tensor([reward])
 
-            # Store the transition in the replay memory
+            # Almacena la transición en la memoria de repetición.
             agent.new_transition(
                 observation, action, reward, next_observation, done
             )
 
-            # Update the current observation
+            # Actualiza la observación actual.
             observation = next_observation
 
-            # Perform one optimization step of the Q-network
+            # Realiza un paso de optimización de la red Q.
             agent.optimise(batch_size)
 
             if done:
                 break
 
-        # Log episode-related information to TensorBoard
+        # Registra la relacion de episodios en TensorBoard.
         writer.add_scalar('Reward', total_reward, episode)
         writer.add_scalar('Epsilon', agent.epsilon(), episode)
         writer.flush()
 
-        if episode % 100 == 0:
+        # Guardar el modelo cada 100 episodios.
+        if episode % 100 == 0: 
             torch.save(agent.policy_net.to('cpu'), f'in_progress_model_{episode}')
             agent.policy_net.to(agent.device)
     writer.close()
